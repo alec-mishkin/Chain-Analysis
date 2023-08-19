@@ -1,9 +1,3 @@
-//This code is going to take in on xyz file and from that get all the shortest paths of all chains
-//This code needs the xyz structure. 
-//It needs to define what will be the intermediate atoms. That is is there a necessary atom for a chain to connect like we do for Ta-O-Ta, Ta-O-Zr, etc.
-//I think I will make an input file for this to read that people can edit.
-//We also need cutoff distances for the pairs. That will of course go in the input distance. 
-//This is a copy of ../GetChains_v7.cpp
 #include <fstream>
 #include <iterator>
 #include <iostream>
@@ -322,10 +316,10 @@ Bonds LoadBonds(string allowBonds, string allowCutOffs)
 	int bondNumber = 0;
 	int numStartAtoms;
 	int numDists;
-/////////////////////////////////////////////////////////////////////////////////
-        for (int i = 0; i <allowBonds.length(); i++)
+        
+	for (int i = 0; i <allowBonds.length(); i++)
 	{
-		cout << allowBonds[i] << endl;//allowBonds[i];
+		cout << allowBonds[i] << endl;
 		if(allowBonds[i] == '-')
 		{
 			givenBonds.bonds[bondNumber].startAtom = tempAtom;		
@@ -345,8 +339,8 @@ Bonds LoadBonds(string allowBonds, string allowCutOffs)
 	}
 	givenBonds.bonds[bondNumber].endAtom = tempAtom;
 	numStartAtoms = bondNumber + 1;
-////////////////////////////////////////////////////////////////////////////////////////
-        string tempDist = "";
+        
+	string tempDist = "";
 	float dist;
 	bondNumber = 0;
 	for (int i = 0; i <allowCutOffs.length(); i++)
@@ -374,7 +368,6 @@ Bonds LoadBonds(string allowBonds, string allowCutOffs)
 	givenBonds.nBonds = numDists;
 	return givenBonds;
 }
-/////////////////////////////////////
 
 float CalculateDistance(XYZAtomData atomData1, XYZAtomData atomData2, float xLength, float yLength, float zLength)
 {
@@ -393,7 +386,6 @@ float CalculateDistance(XYZAtomData atomData1, XYZAtomData atomData2, float xLen
 	float dist = sqrt(xDist*xDist + yDist*yDist + zDist*zDist);
 	return dist;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Vertices MakeGraph(XYZData xYZData, Bonds bonds)
 {
         Vertices vertices;
@@ -408,11 +400,10 @@ Vertices MakeGraph(XYZData xYZData, Bonds bonds)
 				float bondDist = CalculateDistance(xYZData.xYZAtomData[atom1Index], xYZData.xYZAtomData[atom2Index], xYZData.xLength, xYZData.yLength, xYZData.zLength);
 				if(bonds.CheckBondDistances(bondDist))
 				{
-					////////////MAKE THE NEIGHBORS/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+					//MAKE THE NEIGHBORS
 					vertices.verts[atom1Index].nNeighbors = vertices.verts[atom1Index].nNeighbors + 1;
 					vertices.verts[atom1Index].neighbors[(vertices.verts[atom1Index].nNeighbors - 1)].atomId = atom2Index;
 					vertices.verts[atom1Index].neighbors[(vertices.verts[atom1Index].nNeighbors - 1)].distance = bondDist;	
-					///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 				}
                         }
@@ -455,10 +446,6 @@ string MakeAndWritePath(string outputFolder, int binIndex, Path path, XYZData xY
 	std::ofstream out("/ufrc/cheng/amishkin/BONDPATH_C++_TEST/output.xyz");
 	string startAtomType = xYZData.xYZAtomData[path.pathIds[0]].atomType;	
         string endAtomType = xYZData.xYZAtomData[path.pathIds[path.nPathAtoms-1]].atomType;
-/////////////////////////////////////////////////////////////////////////////////////////
-	//path.GetInfo();	
-	//cout << path.nPathAtoms << "StartAtomType: " << startAtomType << "EndAtomType: " << endAtomType << "StartpathId " << path.pathIds[0] << "path.pathIds[path.nPathAtoms-1]" << " " << path.pathIds[path.nPathAtoms-1] << endl;
-/////////////////////////////////////////////////////////////////////////////////////////
 	for (int pathIndex = 0; pathIndex < path.nPathAtoms; pathIndex++)
 	{
 		std::ostringstream ss;
@@ -479,7 +466,6 @@ string MakeAndWritePath(string outputFolder, int binIndex, Path path, XYZData xY
         if (mkdir(outputDirectory.c_str(),0777) != 0)
         {
         mkdir(outputDirectory.c_str(),0777);
-        //cout << "Make Folder" << endl;
         }
 
         WriteXYZFile(outputDirectory, startAtomType, endAtomType, xyzPath, nChain, chainNumber);
@@ -503,13 +489,11 @@ Vertex GetMinUnVisitedVertexId(Vertices vertices,XYZData xYZData)
                         {
                                 minVertex = vertices.verts[i];
 				minDistance = vertices.verts[i].distance;  
-				//cout << " min vertex found " << endl;
                         }
 
                 }
         }
 //If the remainining not visited atoms have a distance of infinity that means they are not connected to any of the atoms in the path we already have
-//
         return minVertex;
 }
 
@@ -520,7 +504,6 @@ Path djikstra(Vertices vertices, int sourceId, int endId,  XYZData xYZData, Path
 	vertices.verts[endId].visited = false; //We want to be able to visit the ending atom so mark that as unvisited
 	for (int pathIndex = 0; pathIndex < oldPath.nPathAtoms; pathIndex = pathIndex + 1)
 	{
-		//cout << "Path Id: " <<  oldPath.pathIds[pathIndex] << endl;
 		if(oldPath.pathIds[pathIndex] != -1)
 		{
 		vertices.verts[oldPath.pathIds[pathIndex]].visited = true ; //If the atoms are already in the path then count them as visit so we don't visit them again
@@ -529,10 +512,8 @@ Path djikstra(Vertices vertices, int sourceId, int endId,  XYZData xYZData, Path
 	
 
 	//First initialize vertices
-	//cout << sourceId << " " << endId << " " << endl;
 	vertices.verts[sourceId].visited = false; //We want to be able to visit the starting atom so mark that as unvisited
 	vertices.verts[sourceId].distance = 0; // The distance between the source atom and istelf is 0 
-	//cout << vertices.verts[sourceId].nNeighbors << endl;
 	Vertex minVertex = GetMinUnVisitedVertexId(vertices, xYZData); //We want to get the atom that is closest to the source atom  (this should be the source atom if it we are just starting)
 	while(minVertex.atomId != endId) //If the next nearest atom is the end atom then we have found the shorest chain
 	{
@@ -596,15 +577,11 @@ void GatherAllPaths(string outputDirectory, XYZData xYZData, Vertices originalVe
 				if(doi < DOI_END and doi > DOI_BEG)
 				{
                                 	int binIndex = FindAtomPairs(doi , BIN_SIZE);
-					//if( DOI_BEG< doi  and doi < DOI_END)
 					Path totalPath;
 					totalPath.nPathAtoms = 0;
 					for (int chainIndex = 0; chainIndex <  nChains; chainIndex++)
 					{
 						Vertices vertices(originalVertices.verts);
-						//cout << binIndex << " " << atom1Index << " " << atom2Index << endl;
-						//atom1Index = 0;
-						//atom2Index = 937;
 						Path path = djikstra(vertices, atom1Index, atom2Index, xYZData, totalPath);
 						if(path.nPathAtoms == 0)
 						{
@@ -618,10 +595,7 @@ void GatherAllPaths(string outputDirectory, XYZData xYZData, Vertices originalVe
 							}
 						}
 						MakeAndWritePath(outputDirectory, binIndex, path, xYZData,nChains,(chainIndex+1));
-						//path.GetInfo();
 						totalPath.AppendPath(path);
-						//a = false;
-						//totalPath.GetInfo();
 					}
 				}
                         }
@@ -662,9 +636,3 @@ int main(int argc, char** argv)
 
 
 
-/*
-
-int FindAtomPairs()
-{
-}
-*/
