@@ -464,10 +464,12 @@ Vertices MakeGraph(XYZData xYZData, Bonds bonds) //Takes in the XYZ data and all
         {
                 for (int atom2Index = 0; atom2Index < xYZData.nAtoms; atom2Index = atom2Index +1)
                 {
-                        if(bonds.CheckBondAtoms(xYZData.xYZAtomData[atom1Index].atomType, xYZData.xYZAtomData[atom2Index].atomType) && atom1Index != atom2Index) //Check if two atoms form a bond based on type and distance 
+                        
+			
+			if(bonds.CheckBondAtoms(xYZData.xYZAtomData[atom1Index].atomType, xYZData.xYZAtomData[atom2Index].atomType) and atom1Index != atom2Index) //Check if two atoms form a bond based on type and distance 
                         {
 				float bondDist = CalculateDistance(xYZData.xYZAtomData[atom1Index], xYZData.xYZAtomData[atom2Index], xYZData.xLength, xYZData.yLength, xYZData.zLength); //Calculate the distance between the two atoms
-				if(bonds.CheckBondDistances(bondDist)) //Are the distance with any of the bond distastances //TODO Check what CheckBondDistances does 
+				if (CheckIfBond(xYZData.xYZAtomData[atom1Index].atomType, xYZData.xYZAtomData[atom2Index].atomType, bondDist)) //Check if the distance between the two atom types is less than the cutoff bond distance
 				{
 					//Give the appropriate vertex its neighbor with its corresponding distance 
 					vertices.verts[atom1Index].nNeighbors = vertices.verts[atom1Index].nNeighbors + 1; //Add 1 to the the total number of neighbors connected to the atom1 Vertex
