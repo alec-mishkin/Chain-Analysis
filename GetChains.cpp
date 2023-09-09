@@ -46,6 +46,10 @@ struct ConfigData
 	string nChains;
 };
 
+/*-----------------------------------------------------------------
+ *The atom object with the necessary attributes for connecting edges between them
+ *----------------------------------------------------------------
+ */
 struct XYZAtomData
 {
 	string atomType;
@@ -98,21 +102,39 @@ struct Bonds
 	}
 };
 
+/*--------------------------------------------------------------
+ *The XYZ structure that contains all of the atoms
+ * -------------------------------------------------------------
+ */
 struct XYZData
 {
         float xLength;
 	float yLength;
 	float zLength;
 	int nAtoms;
-	XYZAtomData xYZAtomData[GLOBAL_N_MAX];
+	XYZAtomData xYZAtomData[GLOBAL_N_MAX]; //You can change the size of GLOBAL_N_MAX but as long as it is bigger then the number of atoms in your structure it should be fine
 };
 
+/*------------------------------------------------------------------
+ *The Neighbor structure is used for the Djikstra algorithm. 
+ It allows the code to keep track of which atoms are connected to eachother
+ * -----------------------------------------------------------------
+ */
 struct Neighbor
 {
 int atomId;
 float distance;
 };
 
+
+/*-----------------------------------------------------------------
+ *Vertices contain what atom id they are, a distance value they can updat  TODO????
+ * Whether or not they have already been visited 
+ * The number of neighbors they have been connected to
+ * The array of neighbors they connected to
+ * prevId TODO?????
+ * ----------------------------------------------------------------
+ */
 struct Vertex
 {
 int atomId;
@@ -120,77 +142,95 @@ float distance;
 bool visited;
 int nNeighbors;
 int prevId;
-Neighbor neighbors[GLOBAL_N_NEIGHBORS];
+Neighbor neighbors[GLOBAL_N_NEIGHBORS]; //Make sure this is larger than the max coordination number of your atoms
 };
 
+
+/*-----------------------------------------
+ *TODO: I am confused why there are two different vertices 
+ TODO Next, look at what initialization function is being called
+ Looks like this is really only being used by the MakeGraph Function
+ * -------------------------------------------
+ */
 struct Vertices
 {
 
-Vertices()
-{
-}	
-Vertices(Vertex vertices[GLOBAL_N_MAX])
-{
-for (int i = 0; i < GLOBAL_N_MAX; i++)
-{
-verts[i]= vertices[i];
-}
-}
-	Vertex verts[GLOBAL_N_MAX];
-	void Initialize()
+	Vertices() //Empty Contrustor
 	{
-                for (int i = 0; i < GLOBAL_N_MAX; i++)
-                {
-		verts[i].atomId = i;
-		verts[i].distance = std::numeric_limits<float>::infinity();
-		verts[i].nNeighbors = 0;
+	}	
+
+	Vertices(Vertex vertices[GLOBAL_N_MAX]) //The Vertices strucure can also be contstructed from an array of vertex
+	{
+
+		for (int i = 0; i < GLOBAL_N_MAX; i++)
+		{	
+			verts[i]= vertices[i];
 		}
 	}
+		
+	Vertex verts[GLOBAL_N_MAX]; //Create an array of vertex
+	void Initialize() //Initialize the array
+	{
+		//Every vertex starts with an atom id, 0 neighbors, and a distance of infinity
+		for (int i = 0; i < GLOBAL_N_MAX; i++)
+		{
+			verts[i].atomId = i;
+			verts[i].distance = std::numeric_limits<float>::infinity();
+			verts[i].nNeighbors = 0;
+		}
+	}
+	
+	//All vertices start with the a distance of infinity to every other atom except them seleves
 	void Initialize(int nAtoms, int sourceAtomId)
 	{
 		for (int i = 0; i < nAtoms; i++)
 		{
-		verts[i].atomId = i;
-		if(verts[i].atomId == sourceAtomId)
-		{
-			verts[i].distance = 0;
-		}
-		else
-		{
-			verts[i].distance = std::numeric_limits<float>::infinity();
-		}
-	
-		verts[i].nNeighbors = 0; 
+			verts[i].atomId = i;
+			if(verts[i].atomId == sourceAtomId)
+			{
+				verts[i].distance = 0;
+			}
+			else
+			{
+				verts[i].distance = std::numeric_limits<float>::infinity();
+			}
+		
+			verts[i].nNeighbors = 0; 
 		}
 	}
 };
 
+/*-------------------------------------------------------------------------
+ *This structure represents a path of atoms or nodes connected by edges 
+ * 
+ *------------------------------------------------------------------------ 
+ */
 struct Path
 {
-int pathIds[3000];
-int nPathAtoms;
-void GetInfo()
-{
-for (int pathIndex = 0; pathIndex < nPathAtoms; pathIndex = pathIndex +1)
-{
-cout << pathIds[pathIndex] << " " ;
-}
-cout << endl; 
-}
-
-void AppendPath(Path path)
-{
-	
-	int oldPathIndex = 0 ;
-	for(int j = nPathAtoms; j < nPathAtoms + path.nPathAtoms; j++)
+	int pathIds[3000];
+	int nPathAtoms;
+	void GetInfo()
+	{
+		for (int pathIndex = 0; pathIndex < nPathAtoms; pathIndex = pathIndex +1)
+		{
+		cout << pathIds[pathIndex] << " " ;
+		}
+		cout << endl; 
+		}
+	//TODO What does this do????
+	void AppendPath(Path path)
 	{
 		
-		pathIds[j] = path.pathIds[oldPathIndex];
-		oldPathIndex = oldPathIndex + 1;
+		int oldPathIndex = 0 ;
+		for(int j = nPathAtoms; j < nPathAtoms + path.nPathAtoms; j++)
+		{
+			
+			pathIds[j] = path.pathIds[oldPathIndex];
+			oldPathIndex = oldPathIndex + 1;
+		}
+		nPathAtoms = nPathAtoms + path.nPathAtoms;
+		
 	}
-	nPathAtoms = nPathAtoms + path.nPathAtoms;
-	
-}
 };
 
 ConfigData ReadInConfigFile(const char* filename)
@@ -369,6 +409,10 @@ Bonds LoadBonds(string allowBonds, string allowCutOffs)
 	return givenBonds;
 }
 
+/*------------------------------------------------------------------------------------------------
+ *Calculate the periodic distance between atoms TODO double check this
+ * -----------------------------------------------------------------------------------------------
+ */
 float CalculateDistance(XYZAtomData atomData1, XYZAtomData atomData2, float xLength, float yLength, float zLength)
 {
 	float rVector1 = (1/xLength);
@@ -386,33 +430,34 @@ float CalculateDistance(XYZAtomData atomData1, XYZAtomData atomData2, float xLen
 	float dist = sqrt(xDist*xDist + yDist*yDist + zDist*zDist);
 	return dist;
 }
-Vertices MakeGraph(XYZData xYZData, Bonds bonds)
+/*-------------------------------------------------------------------
+ *TODO Comment everything
+ * -------------------------------------------------------------------------
+ */
+Vertices MakeGraph(XYZData xYZData, Bonds bonds) //Takes in the XYZ data and all the possbile type of bonds being used
 {
-        Vertices vertices;
-	vertices.Initialize();
-	int nEdges = 0;
-	for (int atom1Index = 0; atom1Index < xYZData.nAtoms; atom1Index = atom1Index +1)
+        Vertices vertices; //Create an object to hold the vertices
+	vertices.Initialize(); //Give all vertices their own atomId, nNeigbhors variable set to 0, and a distance of infinity
+	for (int atom1Index = 0; atom1Index < xYZData.nAtoms; atom1Index = atom1Index +1) //loop through all pairs of atoms
         {
                 for (int atom2Index = 0; atom2Index < xYZData.nAtoms; atom2Index = atom2Index +1)
                 {
-                        if(bonds.CheckBondAtoms(xYZData.xYZAtomData[atom1Index].atomType, xYZData.xYZAtomData[atom2Index].atomType))
+                        if(bonds.CheckBondAtoms(xYZData.xYZAtomData[atom1Index].atomType, xYZData.xYZAtomData[atom2Index].atomType) && atom1Index != atom2Index) //Check if two atoms form a bond based on type and distance 
                         {
-				float bondDist = CalculateDistance(xYZData.xYZAtomData[atom1Index], xYZData.xYZAtomData[atom2Index], xYZData.xLength, xYZData.yLength, xYZData.zLength);
-				if(bonds.CheckBondDistances(bondDist))
+				float bondDist = CalculateDistance(xYZData.xYZAtomData[atom1Index], xYZData.xYZAtomData[atom2Index], xYZData.xLength, xYZData.yLength, xYZData.zLength); //Calculate the distance between the two atoms
+				if(bonds.CheckBondDistances(bondDist)) //Are the distance with any of the bond distastances //TODO Check what CheckBondDistances does 
 				{
-					//MAKE THE NEIGHBORS
-					vertices.verts[atom1Index].nNeighbors = vertices.verts[atom1Index].nNeighbors + 1;
-					vertices.verts[atom1Index].neighbors[(vertices.verts[atom1Index].nNeighbors - 1)].atomId = atom2Index;
-					vertices.verts[atom1Index].neighbors[(vertices.verts[atom1Index].nNeighbors - 1)].distance = bondDist;	
+					//Give the appropriate vertex its neighbor with its corresponding distance 
+					vertices.verts[atom1Index].nNeighbors = vertices.verts[atom1Index].nNeighbors + 1; //Add 1 to the the total number of neighbors connected to the atom1 Vertex
+					vertices.verts[atom1Index].neighbors[(vertices.verts[atom1Index].nNeighbors - 1)].atomId = atom2Index; //Give that neighbor the atom2Index
+					vertices.verts[atom1Index].neighbors[(vertices.verts[atom1Index].nNeighbors - 1)].distance = bondDist;	//Give the vertex the distance to the newly added neighbor
 
 				}
                         }
-                        else
-                        {
-                        }
                 }
         }
-return vertices;
+	//Return a graph with all bonded atoms
+	return vertices;
 }
 
 int FindAtomPairs(float distance_of_interest, float binSize)
