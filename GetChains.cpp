@@ -25,11 +25,13 @@ int HISTOGRAM_SIZE;
 float DOI_BEG ;
 float DOI_END;
 int numberOfChains;
-struct Bond
+
+
+struct Bond //This structure contains the information for one bond type
 {
-        string startAtom;
-        string endAtom;
-        float cutOffDist;
+        string startAtom; //The starting atom type in text 
+        string endAtom; //The ending atom type in text
+        float cutOffDist; //The maximum distance allowed between the two atom types for it to be considered a bond
 };
 
 
@@ -64,15 +66,20 @@ struct XYZAtomData
 	}
 };
 
-struct Bonds
+struct Bonds //This structure contains all the information for allowed bonds
 {
-	int nBonds;
-	Bond bonds[N_Bond_Types];  	
-	Bond tempBond;
-	bool CheckBondAtoms(string atom1, string atom2)
+	int nBonds; //The number of bond types in the atomic structure being analyzed
+	Bond bonds[N_Bond_Types]; //An array of the bond structures 	
+	Bond tempBond; //A bond structure used to store specific bond date when checking conditions
+
+	//Check if the two atom types can possibly make a bond
+	//TODO REMOVE THIS
+	bool CheckBondAtoms(string atom1, string atom2) 
 	{
+		//Loop through all possible defined bonds
 		for (int bondIndex = 0; bondIndex < nBonds; bondIndex = bondIndex +1)
 		{
+			//If there exists a bond struture where atom1 and atom2 are the start atom and end atom or vice versa, than these atoms may make a bond
 			if((atom1 == bonds[bondIndex].startAtom and atom2 == bonds[bondIndex].endAtom) or (atom1 == bonds[bondIndex].endAtom and atom2 == bonds[bondIndex].startAtom))	
 			{
 				return true;
@@ -81,6 +88,7 @@ struct Bonds
 		
 		return false;
 	}
+	//TODO REMOVE THIS
 	bool CheckBondDistances(float distance)
 	{
 		for (int bondIndex = 0; bondIndex < nBonds; bondIndex = bondIndex +1)
@@ -92,6 +100,24 @@ struct Bonds
 		}
 		return false;
 	}
+
+
+	//Check the atom1 and atom2 types and the distance between them to see if they form a bond
+	bool CheckIfBond(string atom1, string atom2, float distance)
+	{
+		//Loop through all possible defined bonds
+		for (int bondIndex = 0; bondIndex < nBonds; bondIndex = bondIndex +1)
+		{
+			//If there exists a bond struture where atom1 and atom2 are the start atom and end atom or vice versa and the distance between these taoms is less than that same bond structures maximum distance, a bond is formed
+			if((atom1 == bonds[bondIndex].startAtom and atom2 == bonds[bondIndex].endAtom) or (atom1 == bonds[bondIndex].endAtom and atom2 == bonds[bondIndex].startAtom) and distance < bonds[bondIndex].cutOffDist)
+			{
+				return true;
+			}
+		}
+		return false;
+
+	}
+	//Output the starting atom type and ending atom type and maximum bond distance for all defined bonds
 	void GetInfo()
 	{
                 for (int bondIndex = 0; bondIndex < nBonds; bondIndex = bondIndex +1)
@@ -430,10 +456,6 @@ float CalculateDistance(XYZAtomData atomData1, XYZAtomData atomData2, float xLen
 	float dist = sqrt(xDist*xDist + yDist*yDist + zDist*zDist);
 	return dist;
 }
-/*-------------------------------------------------------------------
- *TODO Comment everything
- * -------------------------------------------------------------------------
- */
 Vertices MakeGraph(XYZData xYZData, Bonds bonds) //Takes in the XYZ data and all the possbile type of bonds being used
 {
         Vertices vertices; //Create an object to hold the vertices
