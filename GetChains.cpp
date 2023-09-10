@@ -73,7 +73,6 @@ struct Bonds //This structure contains all the information for allowed bonds
 	Bond tempBond; //A bond structure used to store specific bond date when checking conditions
 
 	//Check if the two atom types can possibly make a bond
-	//TODO REMOVE THIS
 	bool CheckBondAtoms(string atom1, string atom2) 
 	{
 		//Loop through all possible defined bonds
@@ -86,18 +85,6 @@ struct Bonds //This structure contains all the information for allowed bonds
 			}
 		}
 		
-		return false;
-	}
-	//TODO REMOVE THIS
-	bool CheckBondDistances(float distance)
-	{
-		for (int bondIndex = 0; bondIndex < nBonds; bondIndex = bondIndex +1)
-		{
-			if((distance < bonds[bondIndex].cutOffDist))
-			{
-				return true;
-			}
-		}
 		return false;
 	}
 
@@ -456,6 +443,7 @@ float CalculateDistance(XYZAtomData atomData1, XYZAtomData atomData2, float xLen
 	float dist = sqrt(xDist*xDist + yDist*yDist + zDist*zDist);
 	return dist;
 }
+
 Vertices MakeGraph(XYZData xYZData, Bonds bonds) //Takes in the XYZ data and all the possbile type of bonds being used
 {
         Vertices vertices; //Create an object to hold the vertices
