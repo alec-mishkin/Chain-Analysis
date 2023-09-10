@@ -220,8 +220,10 @@ struct Vertices
  */
 struct Path
 {
-	int pathIds[3000];
-	int nPathAtoms;
+	int pathIds[3000]; //Create an array of path ids
+	int nPathAtoms; //The number of atoms currently in the path
+	
+	//Output every atom id inside the path 
 	void GetInfo()
 	{
 		for (int pathIndex = 0; pathIndex < nPathAtoms; pathIndex = pathIndex +1)
@@ -229,18 +231,21 @@ struct Path
 		cout << pathIds[pathIndex] << " " ;
 		}
 		cout << endl; 
-		}
-	//TODO What does this do????
-	void AppendPath(Path path)
+	}
+	//Append a new path to the current path
+	void AppendPath(Path path) //Take in the new path
 	{
 		
-		int oldPathIndex = 0 ;
+		int oldPathIndex = 0 ; //This is the original path index from the new path 
+		//Starting from the first empty element in the pathIds array
 		for(int j = nPathAtoms; j < nPathAtoms + path.nPathAtoms; j++)
 		{
 			
+			//Add the new atoms from the new path
 			pathIds[j] = path.pathIds[oldPathIndex];
 			oldPathIndex = oldPathIndex + 1;
 		}
+		//After the all atoms from the new path have been added, recalculate the total number of atoms
 		nPathAtoms = nPathAtoms + path.nPathAtoms;
 		
 	}
