@@ -564,11 +564,10 @@ Vertex GetMinUnVisitedVertexId(Vertices vertices,XYZData xYZData)
 
 
 /*------------------------------------------------------------------------------------------------
- *  TODO WORK ON THIS NEXT
- * 
+ * Get the path of atoms that connect the source and end atom using the Dijkstra's algorithm 
  * -----------------------------------------------------------------------------------------------
  * */
-Path djikstra(Vertices vertices, int sourceId, int endId,  XYZData xYZData, Path oldPath)
+Path Dijkstra(Vertices vertices, int sourceId, int endId,  XYZData xYZData, Path oldPath)
 {
 	//To make a ring all I have to do is make a for loop that will go through all the oldPath and call it visited
 	
@@ -578,7 +577,7 @@ Path djikstra(Vertices vertices, int sourceId, int endId,  XYZData xYZData, Path
 	
 	for (int pathIndex = 0; pathIndex < oldPath.nPathAtoms; pathIndex = pathIndex + 1)
 	{
-		if(oldPath.pathIds[pathIndex] != -1) //TODO what does pathIndex PathID -1 mean
+		if(oldPath.pathIds[pathIndex] != -1) //TODO what does pathIndex PathID -1 mean //Need to give this section a bit more thought
 		{
 			vertices.verts[oldPath.pathIds[pathIndex]].visited = true ; //If the atoms are already in the first path we have been through, then count them as visited so we don't visit them again
 		}
@@ -659,7 +658,7 @@ void GatherAllPaths(string outputDirectory, XYZData xYZData, Vertices originalVe
 					for (int chainIndex = 0; chainIndex <  nChains; chainIndex++)
 					{
 						Vertices vertices(originalVertices.verts);
-						Path path = djikstra(vertices, atom1Index, atom2Index, xYZData, totalPath);
+						Path path = Dijkstra(vertices, atom1Index, atom2Index, xYZData, totalPath);
 						if(path.nPathAtoms == 0)
 						{
 							cout << "NO ATOMS FOUND IN PATH" << endl;
@@ -703,7 +702,7 @@ int main(int argc, char** argv)
 	bonds = LoadBonds(configData.allowedBond, configData.cutOffDistances);
 	bonds.GetInfo();
 	xYZData = ReadInXYZFile(configData.inputFile.c_str());
-	Vertices vertices = MakeGraph(xYZData, bonds); //Set up all the vertices that we can use for the djikstra algrotihm
+	Vertices vertices = MakeGraph(xYZData, bonds); //Set up all the vertices that we can use for the dijkstra algrotihm
 	GatherAllPaths(outputDirectory,xYZData,vertices, numberOfChains);
 	clock_t end = clock();
   	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
