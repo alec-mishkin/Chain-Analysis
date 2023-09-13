@@ -537,7 +537,10 @@ string MakeAndWritePath(string outputFolder, int binIndex, Path path, XYZData xY
 }
 
 
-
+/*------------------------------------------------------------------------------------------------
+ *Return the atom that is closest to the source atom
+ * *----------------------------------------------------------------------------------------------
+ * */
 Vertex GetMinUnVisitedVertexId(Vertices vertices,XYZData xYZData)
 {
         Vertex minVertex;
@@ -555,29 +558,39 @@ Vertex GetMinUnVisitedVertexId(Vertices vertices,XYZData xYZData)
 
                 }
         }
-//If the remainining not visited atoms have a distance of infinity that means they are not connected to any of the atoms in the path we already have
+	//If the output of minVertex.atomId is -1, that means there will be no connecting path between the source atom and the end atom //TODO test this
         return minVertex;
 }
 
 
+/*------------------------------------------------------------------------------------------------
+ *  TODO WORK ON THIS NEXT
+ * 
+ * -----------------------------------------------------------------------------------------------
+ * */
 Path djikstra(Vertices vertices, int sourceId, int endId,  XYZData xYZData, Path oldPath)
 {
 	//To make a ring all I have to do is make a for loop that will go through all the oldPath and call it visited
-	vertices.verts[endId].visited = false; //We want to be able to visit the ending atom so mark that as unvisited
+	
+	//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	//This below only mater if we have already found the first shortest path
+	vertices.verts[endId].visited = false; // We marking the ending atom of the vertex as false since we have not visited there yet (This only matters if a first shortest path has already been found)
+	
 	for (int pathIndex = 0; pathIndex < oldPath.nPathAtoms; pathIndex = pathIndex + 1)
 	{
-		if(oldPath.pathIds[pathIndex] != -1)
+		if(oldPath.pathIds[pathIndex] != -1) //TODO what does pathIndex PathID -1 mean
 		{
-		vertices.verts[oldPath.pathIds[pathIndex]].visited = true ; //If the atoms are already in the path then count them as visit so we don't visit them again
+			vertices.verts[oldPath.pathIds[pathIndex]].visited = true ; //If the atoms are already in the first path we have been through, then count them as visited so we don't visit them again
 		}
 	}
-	
+	//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 	//First initialize vertices
 	vertices.verts[sourceId].visited = false; //We want to be able to visit the starting atom so mark that as unvisited
 	vertices.verts[sourceId].distance = 0; // The distance between the source atom and istelf is 0 
 	Vertex minVertex = GetMinUnVisitedVertexId(vertices, xYZData); //We want to get the atom that is closest to the source atom  (this should be the source atom if it we are just starting)
-	while(minVertex.atomId != endId) //If the next nearest atom is the end atom then we have found the shorest chain
+	
+	while(minVertex.atomId != endId) //If the next nearest atom is the end atom then we have found the shorest chain, otherwise we need to keep searching
 	{
 		//Loop through all the neighbors
 		vertices.verts[minVertex.atomId].visited = true; //We are now finishing this atom
@@ -601,8 +614,9 @@ Path djikstra(Vertices vertices, int sourceId, int endId,  XYZData xYZData, Path
 			break; //End the while loop
 		}
 	}	
-	Path path;
-	int prevId = vertices.verts[endId].prevId ;
+	
+	Path path; //Create the path that we will be filling up
+	int prevId = vertices.verts[endId].prevId ; //We work backwords from the end atom to the source, so start by looking at the atom that was connected to the adom
 	path.pathIds[0] = endId;
 	path.pathIds[1] = vertices.verts[endId].prevId;
 	path.nPathAtoms = 2;
@@ -614,13 +628,14 @@ Path djikstra(Vertices vertices, int sourceId, int endId,  XYZData xYZData, Path
 		path.nPathAtoms = 3;
 		return path;
 	}
-	while(prevId != sourceId)
+	//Until we have made it back to the source Id 
+	while(prevId != sourceId) 
 	{
-		prevId = vertices.verts[prevId].prevId;
-		path.pathIds[path.nPathAtoms] = prevId;
-		path.nPathAtoms = path.nPathAtoms + 1;
+		prevId = vertices.verts[prevId].prevId; //Take the previous atom that connected to the last previous
+		path.pathIds[path.nPathAtoms] = prevId; //Make the (N-1) atom in the path the new prevoious id
+		path.nPathAtoms = path.nPathAtoms + 1; //Increase the number of atoms by 1
 	}
-	return path;
+	return path; //return the new path
 
 }
 
